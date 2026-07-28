@@ -107,6 +107,55 @@ if [ "$NEED_INSTALL" -eq 1 ]; then
   fi
 fi
 
+# --- Seed data ---------------------------------------------------------------
+#
+# A preview that opens on a blank canvas is hard to verify against and hard to
+# demo, so ship one with a diagram already on it.
+#
+# The awkward part: excalidraw has no server and no accounts. Scenes live in the
+# *browser* (localStorage["excalidraw"]), so there is nothing this script can
+# write from inside the sandbox — the seeding has to happen in whichever browser
+# opens the preview URL. So instead of writing data, we arrange for the app to
+# seed itself on first load: drop a classic script into vite's publicDir and
+# point index.html at it.
+#
+# Both edits are made to the working tree, not committed. The next launch runs
+# `git reset --hard` + `git clean -fd` before this script, which reverts
+# index.html and deletes the copied asset, and then we redo them here. That is
+# why excalidraw's own source carries no trace of this — and why a plain
+# `yarn start` outside a preview is completely unaffected.
+SEED_SRC="/code/.aviator/preview/seed-scene.js"
+SEED_NAME="aviator-preview-seed.js"
+# publicDir is "../public" relative to the vite root (excalidraw-app), so this
+# resolves to /code/public and is served from the web root as /<SEED_NAME>.
+SEED_DEST="/code/public/$SEED_NAME"
+INDEX_HTML="$APP_DIR/index.html"
+
+if [ -f "$SEED_SRC" ]; then
+  cp "$SEED_SRC" "$SEED_DEST"
+
+  # Injected as a CLASSIC script (no type="module"). Module scripts are
+  # deferred, so a module here would run AFTER the app has already read
+  # localStorage and found it empty — the seed would land one load too late.
+  # Placed just before </head> so it still precedes the app's entry point.
+  if grep -q "$SEED_NAME" "$INDEX_HTML"; then
+    t "  seed script already injected — leaving index.html alone"
+  else
+    sed -i "s#</head>#    <script src=\"/$SEED_NAME\"></script>\n  </head>#" "$INDEX_HTML"
+    if grep -q "$SEED_NAME" "$INDEX_HTML"; then
+      t "  seed data wired in (canvas opens pre-populated)"
+    else
+      # Not fatal. An unseeded preview is still a working preview, and failing
+      # the whole launch over demo data would be a poor trade — but say so
+      # loudly, because the alternative is silently wondering where the shapes
+      # went.
+      t "  WARN: could not inject seed script — index.html has no </head>?"
+    fi
+  fi
+else
+  t "  WARN: $SEED_SRC missing — preview will open on an empty canvas"
+fi
+
 # --- Start the dev server ----------------------------------------------------
 #
 # Defensive: normally nothing is running here. Aviator either reconnects to an
@@ -178,8 +227,10 @@ for i in $(seq 1 60); do
   sleep 1
 done
 
-# No seed data step here, unlike the microbin preview. excalidraw stores scenes
-# in browser localStorage rather than server-side, so there is nothing to seed
-# from this side — the canvas simply starts empty, which is the app's genuine
-# first-run state. A scenario that needs shapes draws them.
+# Note the seeding above is browser-side, unlike the microbin preview, which
+# seeds over HTTP against a running server. excalidraw has no server to seed
+# into, so the data lands in localStorage on first page load instead. The
+# practical difference: microbin's seed is shared by everyone who opens the
+# preview, while this one is materialised per browser. Same scene either way,
+# since it is generated from a file committed to the repo.
 t "Preview environment ready."
