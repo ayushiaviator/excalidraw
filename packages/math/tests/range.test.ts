@@ -19,6 +19,21 @@ describe("range overlap", () => {
   it("should overlap when range a and b intersect", () => {
     expect(rangesOverlap(range1_4, rangeInclusive(2, 5))).toBe(true);
   });
+
+  it("should not overlap when the ranges are disjoint, in either order", () => {
+    expect(rangesOverlap(range1_4, rangeInclusive(5, 6))).toBe(false);
+    expect(rangesOverlap(rangeInclusive(5, 6), range1_4)).toBe(false);
+  });
+
+  it("should overlap when the ranges only touch at a bound", () => {
+    expect(rangesOverlap(range1_4, rangeInclusive(4, 6))).toBe(true);
+    expect(rangesOverlap(rangeInclusive(-2, 1), range1_4)).toBe(true);
+  });
+
+  it("should handle degenerate single-value ranges", () => {
+    expect(rangesOverlap(rangeInclusive(3, 3), range1_4)).toBe(true);
+    expect(rangesOverlap(rangeInclusive(9, 9), range1_4)).toBe(false);
+  });
 });
 
 describe("range intersection", () => {

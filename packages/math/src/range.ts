@@ -7,7 +7,7 @@ import type { InclusiveRange } from "./types";
  *
  * @param start Start of the range
  * @param end End of the range
- * @returns
+ * @returns The new inclusive range
  */
 export function rangeInclusive(start: number, end: number): InclusiveRange {
   return toBrandedType<InclusiveRange>([start, end]);
@@ -35,19 +35,18 @@ export const rangesOverlap = (
   [a0, a1]: InclusiveRange,
   [b0, b1]: InclusiveRange,
 ): boolean => {
+  // whichever range starts first must reach the other's start for the two to
+  // overlap. Reaching here with a0 > b0 is the only alternative to a0 <= b0,
+  // so there is no third case to fall through to.
   if (a0 <= b0) {
     return a1 >= b0;
   }
 
-  if (a0 >= b0) {
-    return b1 >= a0;
-  }
-
-  return false;
+  return b1 >= a0;
 };
 
 /**
- * Given two ranges,return ther intersection of the two ranges if any e.g. the
+ * Given two ranges, return the intersection of the two ranges if any e.g. the
  * intersection of [1, 3] and [2, 4] is [2, 3].
  *
  * @param param0 The first range to compare
@@ -73,7 +72,7 @@ export const rangeIntersection = (
  *
  * @param value The value to check
  * @param range The range
- * @returns
+ * @returns TRUE if the value falls within the range, bounds included
  */
 export const rangeIncludesValue = (
   value: number,
