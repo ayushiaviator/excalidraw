@@ -82,11 +82,16 @@ export class BinaryHeap<T> {
   }
 
   remove(node: T) {
-    if (this.content.length === 0) {
+    const i = this.content.indexOf(node);
+
+    // the node isn't in the heap, so there's nothing to remove. Bailing out
+    // before the pop() below matters: popping first would detach an unrelated
+    // element from the end of the heap and then never re-insert it, silently
+    // shrinking the heap by one.
+    if (i === -1) {
       return;
     }
 
-    const i = this.content.indexOf(node);
     const end = this.content.pop()!;
 
     if (i < this.content.length) {
@@ -105,6 +110,14 @@ export class BinaryHeap<T> {
   }
 
   rescoreElement(node: T) {
-    this.sinkDown(this.content.indexOf(node));
+    const i = this.content.indexOf(node);
+
+    // sinkDown(-1) would read content[-1] (undefined) and hand it to the score
+    // function, so guard the lookup rather than relying on the caller.
+    if (i === -1) {
+      return;
+    }
+
+    this.sinkDown(i);
   }
 }
