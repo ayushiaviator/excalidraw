@@ -352,7 +352,7 @@ class Library {
     /**
      * LibraryItems that will replace current items. Can be a function which
      * will be invoked after all previous tasks are resolved
-     * (this is the prefered way to update the library to avoid race conditions,
+     * (this is the preferred way to update the library to avoid race conditions,
      * but you'll want to manually merge the library items in the callback
      *  - which is what we're doing in Library.importLibrary()).
      *
