@@ -34,13 +34,27 @@ export class VersionedSnapshotStore<T> {
 
     const snapshot = this.getSnapshot();
 
-    for (const subscriber of this.subscribers) {
-      subscriber(snapshot);
-    }
-    for (const waiter of this.waiters) {
+    // settle the pending pull() promises before running any subscriber, and
+    // drain `waiters` before calling into them. A subscriber that throws would
+    // otherwise abort set() before the waiters loop was ever reached, leaving
+    // every pull() caller blocked on a version that has already been published.
+    //
+    // Reordering is not observable to those callers: resolve() only queues a
+    // microtask, so their continuations still run after the synchronous
+    // subscriber pass completes, exactly as before.
+    const waiters = [...this.waiters];
+    this.waiters.clear();
+
+    for (const waiter of waiters) {
       waiter(snapshot);
     }
-    this.waiters.clear();
+
+    // iterate a copy so that subscribing or unsubscribing from inside a
+    // subscriber applies from the next version onwards, rather than changing
+    // who is notified for this one midway through
+    for (const subscriber of [...this.subscribers]) {
+      subscriber(snapshot);
+    }
 
     return true;
   }
