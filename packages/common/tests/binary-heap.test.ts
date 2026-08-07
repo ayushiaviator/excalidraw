@@ -85,6 +85,26 @@ describe("BinaryHeap", () => {
       expect(heap.size()).toBe(4);
       expect(heap.pop()).toBe(3);
     });
+
+    it("leaves the heap untouched when the node is not present", () => {
+      const heap = numberHeap();
+      [1, 3, 5].forEach((n) => heap.push(n));
+
+      heap.remove(99);
+
+      expect(heap.size()).toBe(3);
+      expect(drain(heap)).toEqual([1, 3, 5]);
+    });
+
+    it("does not shrink the heap when absent nodes are removed repeatedly", () => {
+      const heap = numberHeap();
+      [4, 2, 7].forEach((n) => heap.push(n));
+
+      heap.remove(99);
+      heap.remove(100);
+
+      expect(drain(heap)).toEqual([2, 4, 7]);
+    });
   });
 
   describe("rescoreElement", () => {
@@ -104,6 +124,17 @@ describe("BinaryHeap", () => {
       expect(heap.pop()).toBe(c);
       expect(heap.pop()).toBe(a);
       expect(heap.pop()).toBe(b);
+    });
+
+    it("ignores a node that was never pushed", () => {
+      const heap = new BinaryHeap<Node>((node) => node.f);
+
+      const a = { id: "a", f: 10 };
+      heap.push(a);
+
+      expect(() => heap.rescoreElement({ id: "ghost", f: 1 })).not.toThrow();
+      expect(heap.size()).toBe(1);
+      expect(heap.pop()).toBe(a);
     });
   });
 });
