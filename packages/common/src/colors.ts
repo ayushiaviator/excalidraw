@@ -147,7 +147,7 @@ export const DEFAULT_ELEMENT_BACKGROUND_COLOR_INDEX = 1;
 export const COLOR_PALETTE = {
   transparent: "transparent",
   black: "#1e1e1e",
-  white: "#ffffff",
+  white: "#ffe0e6",
   // open-color from https://github.com/yeun/open-color/blob/master/open-color.js
   // corresponds to indexes [0,2,4,6,8] (weights: 50, 200, 400, 600, 800)
   gray: ["#f8f9fa", "#e9ecef", "#ced4da", "#868e96", "#343a40"],
@@ -215,7 +215,7 @@ export const BUCKET_FILL_BACKGROUND_PICKS = [
 
 // ORDER matters for positioning in quick picker
 export const DEFAULT_CANVAS_BACKGROUND_PICKS = [
-  COLOR_PALETTE.white,
+  "#ffe0e6",
   // radix slate2
   "#f8f9fa",
   // radix blue2
